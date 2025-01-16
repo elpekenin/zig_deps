@@ -1,0 +1,29 @@
+[project]
+name = "zig_deps"
+dynamic = ["version"]
+dependencies = ["requests"]
+
+[project.scripts]
+zig_deps = "zig_deps:main.main"
+
+[build-system]
+requires = [
+    "hatchling",
+    "hatch-vcs"
+]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+packages = ["zig_deps"]
+
+[tool.hatch.build.hooks.vcs]
+version-file = "zig_deps/_version.py"
+
+[tool.mypy]
+strict = true
+
+[tool.ruff.lint]
+extend-select = ["ALL"]
