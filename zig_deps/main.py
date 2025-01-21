@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-"""Check if dependencies are up to date."""
+"""Tool to check if a zig project's dependencies are up to date.
+
+Can also update them, and check for sub-projects recursively.
+"""
 
 # TODO?: async library to invoke comands - may lead to data races or something
 
@@ -12,6 +15,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
+HASH_DISPLAY_LEN = 7
 ZON = "build.zig.zon"
 NAME = Path(__file__).parent.name
 
@@ -37,7 +41,10 @@ def _find_dependencies(
         for raw in f.readlines():
             line = raw.strip()
 
-            # FIXME: very stupid logic, will not handle stuff like
+            if line.startswith("//"):
+                continue
+
+            # FIXME: very stupid logic, may not handle stuff like
             # .dependency = .{ .url ... }
             # .url = "foo\"bar"
             # but should be good enough for most cases
@@ -84,8 +91,11 @@ def get_hash(url: str) -> str:
 
 def get_base(url: str) -> str:
     """Get base URL from a complete one."""
-    # FIXME: support other formats
-    base, _ = url.split("#")
+    base, *parts = url.split("#")
+    if len(parts) == 0:
+        msg = "Unsupported URL format"
+        raise RuntimeError(msg)
+
     return base
 
 
@@ -115,7 +125,7 @@ def main() -> int:
 
     parser.add_argument(
         "root",
-        help="root directory of the project (where build.zig lives)",
+        help="root of the project (build.zig's location). defaults to current dir",
         type=directory,
         nargs=argparse.OPTIONAL,
         default=Path.cwd(),
@@ -124,14 +134,14 @@ def main() -> int:
     parser.add_argument(
         "-r",
         "--recursive",
-        help="whether to scan subdirectories for other .zon files",
+        help="scan subdirectories for other .zon files",
         action="store_true",
     )
 
     parser.add_argument(
         "-u",
         "--update",
-        help="whether to update dependencies to their latest version",
+        help="update dependencies to their latest version",
         action="store_true",
     )
 
@@ -154,7 +164,10 @@ def main() -> int:
                 sys.stdout.write(f"[{base}] already up to date\n")
             elif args.update:
                 update_package(folder, url)
-                sys.stdout.write(f"[{base}] updated {current} -> {latest}\n")
+                sys.stdout.write(
+                    f"[{base}] updated {current[:HASH_DISPLAY_LEN]}"
+                    f" -> {latest[:HASH_DISPLAY_LEN]}\n",
+                )
             else:
                 sys.stdout.write(f"[{base}] out of date\n")
 
