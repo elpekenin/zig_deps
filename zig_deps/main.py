@@ -161,7 +161,7 @@ def main() -> int:
     if not dependencies:
         sys.stdout.write(
             f"no {ZON} file found (or no URLs in it)."
-            " did you run the command from the wrong directory?",
+            " did you run the command from the wrong directory?\n",
         )
         return 0
 
