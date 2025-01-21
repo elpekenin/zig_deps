@@ -15,6 +15,8 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
+from ._version import version
+
 HASH_DISPLAY_LEN = 7
 ZON = "build.zig.zon"
 NAME = Path(__file__).parent.name
@@ -143,6 +145,14 @@ def main() -> int:
         "--update",
         help="update dependencies to their latest version",
         action="store_true",
+    )
+
+    parser.add_argument(
+        "-V",
+        "--version",
+        help="show tool's version and exit",
+        action="version",
+        version=version,
     )
 
     args = parser.parse_args()
